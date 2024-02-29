@@ -17,9 +17,10 @@ const isArray = Array.isArray;
  * Benchmarks: https://esbench.com/bench/5f6b54a0b4632100a7dcd2b3
  */
 
+// 这里的 createVNode 用于 JSX 转译后的代码中创建虚拟节点的
 /**
  * JSX.Element factory used by Babel's {runtime:"automatic"} JSX transform
- * @param {VNode['type']} type
+ * @param {VNode['type']} type 对于函数组件或者class组件，type就是组件本身；对于普通DOM元素，比如div，type就是标签名
  * @param {VNode['props']} props
  * @param {VNode['key']} [key]
  * @param {unknown} [isStaticChildren]
@@ -27,7 +28,8 @@ const isArray = Array.isArray;
  * @param {unknown} [__self]
  */
 function createVNode(type, props, key, isStaticChildren, __source, __self) {
-	console.log('createVNode', { type, props, key });
+	console.log('jsx-runtime createVNode', { type, props, key });
+
 	// We'll want to preserve `ref` in props to get rid of the need for
 	// forwardRef components in the future, but that should happen via
 	// a separate PR.
@@ -35,7 +37,7 @@ function createVNode(type, props, key, isStaticChildren, __source, __self) {
 		ref,
 		i;
 
-	//
+	// 遍历props，将 ref 单独保存，其他prop统一存到normalizedProps中，其实就是分离 ref
 	for (i in props) {
 		if (i == 'ref') {
 			ref = props[i];
@@ -66,7 +68,9 @@ function createVNode(type, props, key, isStaticChildren, __source, __self) {
 
 	// If a Component VNode, check for and apply defaultProps.
 	// Note: `type` is often a String, and can be `undefined` in development.
+	// 不管是函数组件还是class组件，typeof结构都是function
 	if (typeof type === 'function' && (ref = type.defaultProps)) {
+		// 如果是函数组件或者class组件，且组件的 props 中没有定义某个属性，就使用 defaultProps 中定义的默认属性值
 		for (i in ref)
 			if (typeof normalizedProps[i] === 'undefined') {
 				normalizedProps[i] = ref[i];

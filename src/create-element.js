@@ -13,6 +13,7 @@ let vnodeId = 0;
  * @returns {VNode}
  */
 export function createElement(type, props, children) {
+	console.log('createElement', { type, props, children });
 	let normalizedProps = {},
 		key,
 		ref,
@@ -23,6 +24,7 @@ export function createElement(type, props, children) {
 		else normalizedProps[i] = props[i];
 	}
 
+	// 将第3个参数及其后面的参数视为子元素
 	if (arguments.length > 2) {
 		normalizedProps.children =
 			arguments.length > 3 ? slice.call(arguments, 2) : children;
@@ -41,6 +43,8 @@ export function createElement(type, props, children) {
 	return createVNode(type, normalizedProps, key, ref, null);
 }
 
+// 这里的 createVNode 是 preact 内部创建虚拟节点时使用
+// 比如通过 render -> createElement -> createVNode 这条链路调用
 /**
  * Create a VNode (used internally by Preact)
  * @param {VNode["type"]} type The node name or Component
@@ -54,6 +58,7 @@ export function createElement(type, props, children) {
  * @returns {VNode}
  */
 export function createVNode(type, props, key, ref, original) {
+	console.log('preact createVNode', { type, props, key, ref, original });
 	// V8 seems to be better at detecting type shapes if the object is allocated from the same call site
 	// Do not inline into createElement and coerceToVNode!
 	/** @type {VNode} */

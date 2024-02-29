@@ -12,6 +12,7 @@ import { slice } from './util';
  * existing DOM tree rooted at `replaceNode`
  */
 export function render(vnode, parentDom, replaceNode) {
+	console.log('render', { vnode, parentDom, replaceNode });
 	if (options._root) options._root(vnode, parentDom);
 
 	// We abuse the `replaceNode` parameter in `hydrate()` to signal if we are in
@@ -49,6 +50,19 @@ export function render(vnode, parentDom, replaceNode) {
 			: parentDom.firstChild
 			? slice.call(parentDom.childNodes)
 			: null,
+		// 等同于
+		// let diffArgument;
+		// if (!isHydrating && replaceNode) {
+		//     diffArgument = [replaceNode];
+		// } else if (oldVNode) {
+		//     diffArgument = null;
+		// } else if (parentDom.firstChild) {
+		//     diffArgument = slice.call(parentDom.childNodes);
+		// } else {
+		//     diffArgument = null;
+		// }
+		// 通常客户端渲染时，该参数就是 null
+
 		commitQueue,
 		!isHydrating && replaceNode
 			? replaceNode
