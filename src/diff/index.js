@@ -41,6 +41,19 @@ export function diff(
 	isHydrating,
 	refQueue
 ) {
+	console.log('diff', {
+		parentDom,
+		newVNode,
+		oldVNode,
+		globalContext,
+		isSvg,
+		excessDomChildren,
+		commitQueue,
+		oldDom,
+		isHydrating,
+		refQueue
+	});
+
 	/** @type {any} */
 	let tmp,
 		newType = newVNode.type;
@@ -49,6 +62,8 @@ export function diff(
 	// constructor as undefined. This to prevent JSON-injection.
 	if (newVNode.constructor !== undefined) return null;
 
+	// & 是按位与运算符，比如 a & b，的意思是将 a 和 b 的二进制表示进行按位与运算
+	// 该 if 语句用于判断 vnode.flags 是否包含 MODE_HYDRATE
 	// If the previous diff bailed out, resume creating/hydrating.
 	if (oldVNode._flags & MODE_SUSPENDED) {
 		isHydrating = !!(oldVNode._flags & MODE_HYDRATE);
@@ -56,16 +71,19 @@ export function diff(
 		excessDomChildren = [oldDom];
 	}
 
+	console.log('options', options);
+
 	if ((tmp = options._diff)) tmp(newVNode);
 
 	outer: if (typeof newType == 'function') {
+		// 类组件和函数组件都会走到这里
 		try {
 			let c, isNew, oldProps, oldState, snapshot, clearProcessingException;
 			let newProps = newVNode.props;
 
 			// Necessary for createContext api. Setting this property will pass
 			// the context value as `this.context` just for this component.
-			tmp = newType.contextType;
+			tmp = newType.contextType; // 类组件读取context https://zh-hans.react.dev/reference/react/Component#static-contexttype
 			let provider = tmp && globalContext[tmp._id];
 			let componentContext = tmp
 				? provider
@@ -75,21 +93,25 @@ export function diff(
 
 			// Get component and set it to `c`
 			if (oldVNode._component) {
+				// oldVNode 已经实例化了
 				c = newVNode._component = oldVNode._component;
 				clearProcessingException = c._processingException = c._pendingError;
 			} else {
+				// oldVNode 没有实例化
 				// Instantiate the new component
 				if ('prototype' in newType && newType.prototype.render) {
+					// 如果是类组件，则实例化组件之后即得到组件实例
 					// @ts-expect-error The check above verifies that newType is suppose to be constructed
 					newVNode._component = c = new newType(newProps, componentContext); // eslint-disable-line new-cap
 				} else {
+					// 如果是函数组件，转换为类组件
 					// @ts-expect-error Trust me, Component implements the interface we want
-					newVNode._component = c = new BaseComponent(
+					newVNode._component = c = new BaseComponent( // BaseComponent 就是把 props 和 context 绑定到 this 上
 						newProps,
 						componentContext
 					);
-					c.constructor = newType;
-					c.render = doRender;
+					c.constructor = newType; // 类组件的构造函数就是函数组件本身
+					c.render = doRender; // doRender 用于渲染函数组件，doRender 返回执行 c.constructor 的结果，即返回函数组件执行结果
 				}
 				if (provider) provider.sub(c);
 
@@ -601,6 +623,7 @@ export function unmount(vnode, parentVNode, skipRemove) {
 	vnode._parent = vnode._dom = vnode._nextDom = undefined;
 }
 
+// 函数组件的 render 方法
 /** The `.render()` method for a PFC backing instance. */
 function doRender(props, state, context) {
 	return this.constructor(props, context);

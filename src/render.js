@@ -6,7 +6,7 @@ import { slice } from './util';
 
 /**
  * Render a Preact virtual node into a DOM element
- * @param {ComponentChild} vnode The virtual node to render
+ * @param {ComponentChild} vnode The virtual node to render，即已经被编译成 preact.jsx 调用的 App 组件
  * @param {PreactElement} parentDom The DOM element to render into
  * @param {PreactElement | object} [replaceNode] Optional: Attempt to re-use an
  * existing DOM tree rooted at `replaceNode`
@@ -29,6 +29,7 @@ export function render(vnode, parentDom, replaceNode) {
 		? null
 		: (replaceNode && replaceNode._children) || parentDom._children;
 
+	// 调用 createElement -> preact.createVNode 创建一个 Fragment
 	vnode = ((!isHydrating && replaceNode) || parentDom)._children =
 		createElement(Fragment, null, [vnode]);
 

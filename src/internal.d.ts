@@ -132,25 +132,30 @@ declare global {
 	export interface VNode<P = {}> extends preact.VNode<P> {
 		// Redefine type here using our internal ComponentType type, and specify
 		// string has an undefined `defaultProps` property to make TS happy
+		// type 对于函数组件或者class组件，type就是组件本身；对于普通DOM元素，比如div，type就是标签名
 		type: (string & { defaultProps: undefined }) | ComponentType<P>;
 		props: P & { children: ComponentChildren };
 		ref?: Ref<any> | null;
 		_children: Array<VNode<any>> | null;
-		_parent: VNode | null;
-		_depth: number | null;
+		_parent: VNode | null; // 当前节点的父节点
+		_depth: number | null; // 当前节点在虚拟 DOM 树中的深度
 		/**
 		 * The [first (for Fragments)] DOM child of a VNode
 		 */
+		// 当前节点对应的真实 DOM 节点
+		// 对于 Fragment ，_dom 是其第一个 DOM 子节点
 		_dom: PreactElement | null;
 		/**
 		 * The last dom child of a Fragment, or components that return a Fragment
 		 */
+		// 当前节点的下一个兄弟 DOM 节点
+		// 对于 Fragment 或者返回 Fragment 的组件，_nextDom 是其最后一个 DOM 子节点
 		_nextDom: PreactElement | null | undefined;
-		_component: Component | null;
+		_component: Component | null; // 组件实例，如果这个当前节点是一个组件节点，那么它表示当前节点对应的组件实例
 		constructor: undefined;
-		_original: number;
-		_index: number;
-		_flags: number;
+		_original: number; // 当前节点的原始状态
+		_index: number; // 当前节点在其父节点的子节点列表中的位置
+		_flags: number; // 当前节点的一些标志，例如是否需要更新等
 	}
 
 	export interface Component<P = {}, S = {}> extends preact.Component<P, S> {
