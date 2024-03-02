@@ -81,6 +81,7 @@ export function diff(
 			let c, isNew, oldProps, oldState, snapshot, clearProcessingException;
 			let newProps = newVNode.props;
 
+			// 这三行代码与 context 有关
 			// Necessary for createContext api. Setting this property will pass
 			// the context value as `this.context` just for this component.
 			tmp = newType.contextType; // 类组件读取context https://zh-hans.react.dev/reference/react/Component#static-contexttype
@@ -120,7 +121,7 @@ export function diff(
 				c.context = componentContext;
 				c._globalContext = globalContext;
 				isNew = c._dirty = true;
-				c._renderCallbacks = [];
+				c._renderCallbacks = []; // 渲染完成后调用的函数，比如 componentDidMount
 				c._stateCallbacks = [];
 			}
 
@@ -129,6 +130,7 @@ export function diff(
 				c._nextState = c.state;
 			}
 
+			// 类组件可以设置静态方法 getDerivedStateFromProps，参考 https://zh-hans.react.dev/reference/react/Component#static-getderivedstatefromprops
 			if (newType.getDerivedStateFromProps != null) {
 				if (c._nextState == c.state) {
 					c._nextState = assign({}, c._nextState);
@@ -144,8 +146,8 @@ export function diff(
 			oldState = c.state;
 			c._vnode = newVNode;
 
-			// Invoke pre-render lifecycle methods
-			if (isNew) {
+			// Invoke pre-render lifecycle methods 调用渲染前生命周期方法，比如 componentWillMount
+			if (isNew) { // 如果 oldNode 没有实例化，isNew会在前面设为 true
 				if (
 					newType.getDerivedStateFromProps == null &&
 					c.componentWillMount != null
@@ -161,7 +163,7 @@ export function diff(
 					newType.getDerivedStateFromProps == null &&
 					newProps !== oldProps &&
 					c.componentWillReceiveProps != null
-				) {
+				) { // 类组件可以定义 componentWillReceiveProps 方法，参考 https://zh-hans.react.dev/reference/react/Component#unsafe_componentwillreceiveprops
 					c.componentWillReceiveProps(newProps, componentContext);
 				}
 
@@ -222,7 +224,7 @@ export function diff(
 
 			let renderHook = options._render,
 				count = 0;
-			if ('prototype' in newType && newType.prototype.render) {
+			if ('prototype' in newType && newType.prototype.render) { // 类组件走这里
 				c.state = c._nextState;
 				c._dirty = false;
 
@@ -234,12 +236,12 @@ export function diff(
 					c._renderCallbacks.push(c._stateCallbacks[i]);
 				}
 				c._stateCallbacks = [];
-			} else {
+			} else { // 函数组件走这里
 				do {
 					c._dirty = false;
 					if (renderHook) renderHook(newVNode);
 
-					tmp = c.render(c.props, c.state, c.context);
+					tmp = c.render(c.props, c.state, c.context); // tmp 就是函数组件执行的结果
 
 					// Handle setState called in render, see #2553
 					c.state = c._nextState;
@@ -249,16 +251,19 @@ export function diff(
 			// Handle setState called in render, see #2553
 			c.state = c._nextState;
 
+			// 类组件可以定义 getChildContext 方法，参考 https://zh-hans.react.dev/reference/react/Component#getchildcontext
 			if (c.getChildContext != null) {
 				globalContext = assign(assign({}, globalContext), c.getChildContext());
 			}
 
+			// 类组件可以定义 getSnapshotBeforeUpdategetSnapshotBeforeUpdate 方法，参考 https://zh-hans.react.dev/reference/react/Component#getsnapshotbeforeupdate
 			if (!isNew && c.getSnapshotBeforeUpdate != null) {
 				snapshot = c.getSnapshotBeforeUpdate(oldProps, oldState);
 			}
 
 			let isTopLevelFragment =
 				tmp != null && tmp.type === Fragment && tmp.key == null;
+			// 获取渲染结果，如果是一个没有 key 的 Fragment，则获取它的子元素，否则渲染结果就是组件执行结果
 			let renderResult = isTopLevelFragment ? tmp.props.children : tmp;
 
 			diffChildren(
