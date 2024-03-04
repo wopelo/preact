@@ -169,21 +169,27 @@ function constructNewChildrenArray(newParentVNode, renderResult, oldChildren) {
 
 	const newChildrenLength = renderResult.length;
 	let oldChildrenLength = oldChildren.length,
-		remainingOldChildren = oldChildrenLength;
+		remainingOldChildren = oldChildrenLength; // 剩余需要搜索的旧虚拟节点数量，用于在旧节点数组中查找新节点对应位置所用
 
 	let skew = 0;
 
 	newParentVNode._children = [];
+
+	// 遍历渲染结果
 	for (i = 0; i < newChildrenLength; i++) {
 		// @ts-expect-error We are reusing the childVNode variable to hold both the
 		// pre and post normalized childVNode
 		childVNode = renderResult[i];
+
+		// 接下来的这一串 if- else 都会执行 childVNode = newParentVNode._children[i] = xxx 的操作
+		// 目的是根据子组件渲染结果，填充 newParentVNode 的子元素
 
 		if (
 			childVNode == null ||
 			typeof childVNode == 'boolean' ||
 			typeof childVNode == 'function'
 		) {
+			// 某个组件返回 null 或 布尔值 或 函数 或 class，这种情况视为无效
 			childVNode = newParentVNode._children[i] = null;
 		}
 		// If this newVNode is being reused (e.g. <div>{reuse}{reuse}</div>) in the same diff,
@@ -196,6 +202,7 @@ function constructNewChildrenArray(newParentVNode, renderResult, oldChildren) {
 			typeof childVNode == 'bigint' ||
 			childVNode.constructor == String
 		) {
+			// 某个组件返回 字符串 或 数字 或 大整数，则创建对应的VNode
 			childVNode = newParentVNode._children[i] = createVNode(
 				null,
 				childVNode,
@@ -204,6 +211,7 @@ function constructNewChildrenArray(newParentVNode, renderResult, oldChildren) {
 				null
 			);
 		} else if (isArray(childVNode)) {
+			// 某个组件返回数字，则创建对应的VNode
 			childVNode = newParentVNode._children[i] = createVNode(
 				Fragment,
 				{ children: childVNode },
@@ -227,7 +235,7 @@ function constructNewChildrenArray(newParentVNode, renderResult, oldChildren) {
 			childVNode = newParentVNode._children[i] = childVNode;
 		}
 
-		const skewedIndex = i + skew;
+		const skewedIndex = i + skew; // skewedIndex 表示当前节点是父节点的第几个子节点
 
 		// Handle unmounting null placeholders, i.e. VNode => null in unkeyed children
 		if (childVNode == null) {
@@ -261,6 +269,7 @@ function constructNewChildrenArray(newParentVNode, renderResult, oldChildren) {
 		childVNode._parent = newParentVNode;
 		childVNode._depth = newParentVNode._depth + 1;
 
+		// 查找新节点是否能在旧节点数组中匹配到
 		const matchingIndex = findMatchingIndex(
 			childVNode,
 			oldChildren,
@@ -271,10 +280,11 @@ function constructNewChildrenArray(newParentVNode, renderResult, oldChildren) {
 		// Temporarily store the matchingIndex on the _index property so we can pull
 		// out the oldVNode in diffChildren. We'll override this to the VNode's
 		// final index after using this property to get the oldVNode
-		childVNode._index = matchingIndex;
+		childVNode._index = matchingIndex; // 暂时将匹配到的索引（有可能为-1）存储到_index属性上
 
 		oldVNode = null;
 		if (matchingIndex !== -1) {
+			// 旧节点数组中匹配到了新节点，
 			oldVNode = oldChildren[matchingIndex];
 			remainingOldChildren--;
 			if (oldVNode) {
@@ -394,10 +404,11 @@ export function toChildArray(children, out) {
 }
 
 /**
+ * 该函数用于在一个旧VNode数组中，找到新VNode对应的索引。找到的根据是新旧两个节点key和type相同，且旧节点没有被遍历过。
  * @param {VNode} childVNode
  * @param {VNode[]} oldChildren
- * @param {number} skewedIndex
- * @param {number} remainingOldChildren
+ * @param {number} skewedIndex 开始搜索的索引位置，从新节点在新数组的位置开始
+ * @param {number} remainingOldChildren 剩余需要搜索的旧虚拟节点数量
  * @returns {number}
  */
 function findMatchingIndex(
@@ -410,7 +421,7 @@ function findMatchingIndex(
 	const type = childVNode.type;
 	let x = skewedIndex - 1;
 	let y = skewedIndex + 1;
-	let oldVNode = oldChildren[skewedIndex];
+	let oldVNode = oldChildren[skewedIndex]; // 相同位置的节点
 
 	// We only need to perform a search if there are more children
 	// (remainingOldChildren) to search. However, if the oldVNode we just looked
@@ -420,9 +431,14 @@ function findMatchingIndex(
 	// remainingOldChildren > 1 if the oldVNode is not already used/matched. Else
 	// if the oldVNode was null or matched, then there could needs to be at least
 	// 1 (aka `remainingOldChildren > 0`) children to find and compare against.
+	// `shouldSearch` 变量决定了是否需要在 `oldChildren` 中进行搜索以找到与 `childVNode` 匹配的节点。只有当 `oldChildren` 中还有未匹配的节点时，才需要进行搜索。
+	// 如果在 `skewedIndex` 位置的 `oldVNode` 还未在当前的 diff 过程中被使用，那么至少还有一个其他的节点可以尝试进行匹配，因此 `remainingOldChildren` 必须大于1。
+	// 这就是 `shouldSearch` 的赋值表达式 `remainingOldChildren > (oldVNode != null && (oldVNode._flags & MATCHED) === 0 ? 1 : 0)` 中的 `1` 的来源。
+	// 如果 `oldVNode` 已经被匹配过，或者 `oldVNode` 为 `null`，那么只需要 `oldChildren` 中至少还有1个节点未被匹配，就需要进行搜索。这就是 `shouldSearch` 的赋值表达式中的 `0` 的来源。
 	let shouldSearch =
 		remainingOldChildren >
 		(oldVNode != null && (oldVNode._flags & MATCHED) === 0 ? 1 : 0);
+	// 还有不为null的节点没有被遍历到，则至少还有1个节点要遍历；如果当前节点为null，或者已经遍历过了，则需要继续遍历剩余的旧节点
 
 	if (
 		oldVNode === null ||
@@ -431,9 +447,12 @@ function findMatchingIndex(
 			type === oldVNode.type &&
 			(oldVNode._flags & MATCHED) === 0)
 	) {
+		// 如果相同位置上的节点是null，或者key/type完全相同且旧节点还没有被遍历过，则视为匹配成功
 		return skewedIndex;
 	} else if (shouldSearch) {
+		// 相同位置的节点没有匹配上，且需要继续搜索
 		while (x >= 0 || y < oldChildren.length) {
+			// 同时向前和向后搜索
 			if (x >= 0) {
 				oldVNode = oldChildren[x];
 				if (
@@ -444,7 +463,7 @@ function findMatchingIndex(
 				) {
 					return x;
 				}
-				x--;
+				x--; // 没有匹配成功则继续往前找
 			}
 
 			if (y < oldChildren.length) {
@@ -457,10 +476,10 @@ function findMatchingIndex(
 				) {
 					return y;
 				}
-				y++;
+				y++; // 没有匹配成功则继续往后找
 			}
 		}
 	}
 
-	return -1;
+	return -1; // 没找到
 }
