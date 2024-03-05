@@ -1,7 +1,12 @@
 import { useState } from 'preact/hooks';
-import preactLogo from './assets/preact.svg';
-import viteLogo from '/vite.svg';
 import './app.css';
+
+import { constructNewChildrenArray } from './test/diffTest';
+
+constructNewChildrenArray(
+	['A', 'B', 'C', 'D', 'E', 'F'].map(value => ({ value, _flags: [] })),
+	['B', 'A', 'C', 'D', 'F', 'E'].map(value => ({ value, _flags: [] }))
+);
 
 export function App() {
 	const [count, setCount] = useState(0);

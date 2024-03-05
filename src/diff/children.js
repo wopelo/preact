@@ -175,7 +175,6 @@ function constructNewChildrenArray(newParentVNode, renderResult, oldChildren) {
 
 	newParentVNode._children = [];
 
-	// 遍历渲染结果
 	for (i = 0; i < newChildrenLength; i++) {
 		// @ts-expect-error We are reusing the childVNode variable to hold both the
 		// pre and post normalized childVNode
@@ -183,7 +182,6 @@ function constructNewChildrenArray(newParentVNode, renderResult, oldChildren) {
 
 		// 接下来的这一串 if- else 都会执行 childVNode = newParentVNode._children[i] = xxx 的操作
 		// 目的是根据子组件渲染结果，填充 newParentVNode 的子元素
-
 		if (
 			childVNode == null ||
 			typeof childVNode == 'boolean' ||
@@ -211,7 +209,7 @@ function constructNewChildrenArray(newParentVNode, renderResult, oldChildren) {
 				null
 			);
 		} else if (isArray(childVNode)) {
-			// 某个组件返回数字，则创建对应的VNode
+			// 某个组件返回数组，则创建对应的VNode
 			childVNode = newParentVNode._children[i] = createVNode(
 				Fragment,
 				{ children: childVNode },
@@ -235,7 +233,7 @@ function constructNewChildrenArray(newParentVNode, renderResult, oldChildren) {
 			childVNode = newParentVNode._children[i] = childVNode;
 		}
 
-		const skewedIndex = i + skew; // skewedIndex 表示当前节点是父节点的第几个子节点
+		const skewedIndex = i + skew;
 
 		// Handle unmounting null placeholders, i.e. VNode => null in unkeyed children
 		if (childVNode == null) {
@@ -269,7 +267,7 @@ function constructNewChildrenArray(newParentVNode, renderResult, oldChildren) {
 		childVNode._parent = newParentVNode;
 		childVNode._depth = newParentVNode._depth + 1;
 
-		// 查找新节点是否能在旧节点数组中匹配到
+		// 查找新节点是否能在旧节点数组中匹配到，matchingIndex是新节点在旧节点数组中的索引
 		const matchingIndex = findMatchingIndex(
 			childVNode,
 			oldChildren,
@@ -284,11 +282,11 @@ function constructNewChildrenArray(newParentVNode, renderResult, oldChildren) {
 
 		oldVNode = null;
 		if (matchingIndex !== -1) {
-			// 旧节点数组中匹配到了新节点，
+			// 旧节点数组中匹配到了新节点
 			oldVNode = oldChildren[matchingIndex];
-			remainingOldChildren--;
+			remainingOldChildren--; // 剩余需要搜索的旧虚拟节点数量减1
 			if (oldVNode) {
-				oldVNode._flags |= MATCHED;
+				oldVNode._flags |= MATCHED; // 将找到的节点标记为已匹配
 			}
 		}
 
@@ -325,6 +323,7 @@ function constructNewChildrenArray(newParentVNode, renderResult, oldChildren) {
 
 			// Move this VNode's DOM if the original index (matchingIndex) doesn't
 			// match the new skew index (i + new skew)
+			// 虚拟节点在旧数组中的位置（matchingIndex）与其在新数组中的位置（i + skew）不一致，那么就需要移动这个虚拟节点对应的 DOM 元素
 			if (matchingIndex !== i + skew) {
 				childVNode._flags |= INSERT_VNODE;
 			}
@@ -335,6 +334,7 @@ function constructNewChildrenArray(newParentVNode, renderResult, oldChildren) {
 	// unmount DOM from the beginning of the oldChildren, we can adjust oldDom to
 	// point to the next child, which needs to be the first DOM node that won't be
 	// unmounted.
+	// 如果还有剩余的 oldChildren，那么就需要将它们移除
 	if (remainingOldChildren) {
 		for (i = 0; i < oldChildrenLength; i++) {
 			oldVNode = oldChildren[i];
@@ -438,7 +438,7 @@ function findMatchingIndex(
 	let shouldSearch =
 		remainingOldChildren >
 		(oldVNode != null && (oldVNode._flags & MATCHED) === 0 ? 1 : 0);
-	// 还有不为null的节点没有被遍历到，则至少还有1个节点要遍历；如果当前节点为null，或者已经遍历过了，则需要继续遍历剩余的旧节点
+	// 还有不为null的节点没有被匹配上，则至少还有1个节点要遍历；如果当前节点为null，或者已经匹配上了，则需要继续遍历剩余的旧节点
 
 	if (
 		oldVNode === null ||
@@ -447,7 +447,7 @@ function findMatchingIndex(
 			type === oldVNode.type &&
 			(oldVNode._flags & MATCHED) === 0)
 	) {
-		// 如果相同位置上的节点是null，或者key/type完全相同且旧节点还没有被遍历过，则视为匹配成功
+		// 如果相同位置上的节点是null，或者key/type完全相同且旧节点还没有被匹配上，则视为匹配成功
 		return skewedIndex;
 	} else if (shouldSearch) {
 		// 相同位置的节点没有匹配上，且需要继续搜索
