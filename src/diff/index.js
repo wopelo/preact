@@ -71,7 +71,7 @@ export function diff(
 		excessDomChildren = [oldDom];
 	}
 
-	console.log('options', options);
+	// console.log('options', options);
 
 	if ((tmp = options._diff)) tmp(newVNode);
 
@@ -147,7 +147,8 @@ export function diff(
 			c._vnode = newVNode;
 
 			// Invoke pre-render lifecycle methods 调用渲染前生命周期方法，比如 componentWillMount
-			if (isNew) { // 如果 oldNode 没有实例化，isNew会在前面设为 true
+			if (isNew) {
+				// 如果 oldNode 没有实例化，isNew会在前面设为 true
 				if (
 					newType.getDerivedStateFromProps == null &&
 					c.componentWillMount != null
@@ -163,7 +164,8 @@ export function diff(
 					newType.getDerivedStateFromProps == null &&
 					newProps !== oldProps &&
 					c.componentWillReceiveProps != null
-				) { // 类组件可以定义 componentWillReceiveProps 方法，参考 https://zh-hans.react.dev/reference/react/Component#unsafe_componentwillreceiveprops
+				) {
+					// 类组件可以定义 componentWillReceiveProps 方法，参考 https://zh-hans.react.dev/reference/react/Component#unsafe_componentwillreceiveprops
 					c.componentWillReceiveProps(newProps, componentContext);
 				}
 
@@ -224,7 +226,8 @@ export function diff(
 
 			let renderHook = options._render,
 				count = 0;
-			if ('prototype' in newType && newType.prototype.render) { // 类组件走这里
+			if ('prototype' in newType && newType.prototype.render) {
+				// 类组件走这里
 				c.state = c._nextState;
 				c._dirty = false;
 
@@ -236,12 +239,15 @@ export function diff(
 					c._renderCallbacks.push(c._stateCallbacks[i]);
 				}
 				c._stateCallbacks = [];
-			} else { // 函数组件走这里
+			} else {
+				// 函数组件走这里
 				do {
 					c._dirty = false;
 					if (renderHook) renderHook(newVNode);
 
 					tmp = c.render(c.props, c.state, c.context); // tmp 就是函数组件执行的结果
+
+					console.log('tmp', tmp);
 
 					// Handle setState called in render, see #2553
 					c.state = c._nextState;

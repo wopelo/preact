@@ -39,6 +39,20 @@ export function diffChildren(
 	isHydrating,
 	refQueue
 ) {
+	console.log('diffChildren', {
+		parentDom,
+		renderResult,
+		newParentVNode,
+		oldParentVNode,
+		globalContext,
+		isSvg,
+		excessDomChildren,
+		commitQueue,
+		oldDom,
+		isHydrating,
+		refQueue
+	});
+
 	let i,
 		/** @type {VNode} */
 		oldVNode,
@@ -72,6 +86,7 @@ export function diffChildren(
 
 		// At this point, constructNewChildrenArray has assigned _index to be the
 		// matchingIndex for this VNode's oldVNode (or -1 if there is no oldVNode).
+		// 这里如果新VNode能够找到对应的旧VNode，则新VNode的_index属性不为-1
 		if (childVNode._index === -1) {
 			oldVNode = EMPTY_OBJ;
 		} else {
@@ -79,9 +94,11 @@ export function diffChildren(
 		}
 
 		// Update childVNode._index to its final index
+		// 将新VNode的_index属性更新成最终索引
 		childVNode._index = i;
 
 		// Morph the old element into the new one, but don't append it to the dom yet
+		// 继续往下diff
 		diff(
 			parentDom,
 			childVNode,
@@ -278,7 +295,7 @@ function constructNewChildrenArray(newParentVNode, renderResult, oldChildren) {
 		// Temporarily store the matchingIndex on the _index property so we can pull
 		// out the oldVNode in diffChildren. We'll override this to the VNode's
 		// final index after using this property to get the oldVNode
-		childVNode._index = matchingIndex; // 暂时将匹配到的索引（有可能为-1）存储到_index属性上
+		childVNode._index = matchingIndex; // 暂时将匹配到的索引（有可能为-1）存储到新 VNode 的 _index 属性上
 
 		oldVNode = null;
 		if (matchingIndex !== -1) {
@@ -286,7 +303,7 @@ function constructNewChildrenArray(newParentVNode, renderResult, oldChildren) {
 			oldVNode = oldChildren[matchingIndex];
 			remainingOldChildren--; // 剩余需要搜索的旧虚拟节点数量减1
 			if (oldVNode) {
-				oldVNode._flags |= MATCHED; // 将找到的节点标记为已匹配
+				oldVNode._flags |= MATCHED; // 将找到的旧VNode标记为已匹配
 			}
 		}
 

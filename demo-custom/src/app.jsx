@@ -1,22 +1,27 @@
 import { useState } from 'preact/hooks';
 import './app.css';
 
-import { constructNewChildrenArray } from './test/diffTest';
+// import { constructNewChildrenArray } from './test/diffTest';
 
-constructNewChildrenArray(
-	['A', 'B', 'C', 'D', 'E', 'F'].map(value => ({ value, _flags: [] })),
-	['B', 'A', 'C', 'D', 'F', 'E'].map(value => ({ value, _flags: [] }))
-);
+// constructNewChildrenArray(
+// 	['A', 'B', 'C', 'D', 'E', 'F'].map(value => ({ value, _flags: [] })),
+// 	['B', 'A', 'C', 'D', 'F', 'E'].map(value => ({ value, _flags: [] }))
+// );
 
 export function App() {
-	const [count, setCount] = useState(0);
+	const [list, setList] = useState(['A', 'B', 'C', 'D', 'E', 'F']);
 
 	return (
 		<>
-			<h1>Vite + Preact</h1>
 			<div class="card">
-				<button onClick={() => setCount(count => count + 1)}>Add count</button>
-				<p>count is {count}</p>
+				{list.map(item => (
+					<div key={item}>{item}</div>
+				))}
+			</div>
+			<div class="card">
+				<button onClick={() => setList(['B', 'A', 'C', 'D', 'F', 'E'])}>
+					Change List
+				</button>
 			</div>
 		</>
 	);
