@@ -172,6 +172,8 @@ export function diffChildren(
 }
 
 /**
+ * 根据新的渲染结果 (renderResult) 构建一个新的子节点数组 (newParentVNode._children)
+ * 同时处理旧的子节点数组 (oldChildren) 中的节点，包括对匹配、插入、移动和卸载等操作
  * @param {VNode} newParentVNode
  * @param {ComponentChildren[]} renderResult
  * @param {VNode[]} oldChildren
@@ -190,7 +192,7 @@ function constructNewChildrenArray(newParentVNode, renderResult, oldChildren) {
 
 	let skew = 0;
 
-	newParentVNode._children = [];
+	newParentVNode._children = []; // 初始化 newParentVNode 的子元素数组
 
 	for (i = 0; i < newChildrenLength; i++) {
 		// @ts-expect-error We are reusing the childVNode variable to hold both the
@@ -203,8 +205,7 @@ function constructNewChildrenArray(newParentVNode, renderResult, oldChildren) {
 			childVNode == null ||
 			typeof childVNode == 'boolean' ||
 			typeof childVNode == 'function'
-		) {
-			// 某个组件返回 null 或 布尔值 或 函数 或 class，这种情况视为无效
+		) { // 某个组件返回 null 或 布尔值 或 函数 或 class，这种情况视为无效
 			childVNode = newParentVNode._children[i] = null;
 		}
 		// If this newVNode is being reused (e.g. <div>{reuse}{reuse}</div>) in the same diff,
@@ -216,8 +217,7 @@ function constructNewChildrenArray(newParentVNode, renderResult, oldChildren) {
 			// eslint-disable-next-line valid-typeof
 			typeof childVNode == 'bigint' ||
 			childVNode.constructor == String
-		) {
-			// 某个组件返回 字符串 或 数字 或 大整数，则创建对应的VNode
+		) { // 某个组件返回 字符串 或 数字 或 大整数，则创建对应的VNode
 			childVNode = newParentVNode._children[i] = createVNode(
 				null,
 				childVNode,
@@ -225,8 +225,7 @@ function constructNewChildrenArray(newParentVNode, renderResult, oldChildren) {
 				null,
 				null
 			);
-		} else if (isArray(childVNode)) {
-			// 某个组件返回数组，则创建对应的VNode
+		} else if (isArray(childVNode)) { // 某个组件返回数组，则创建对应的VNode
 			childVNode = newParentVNode._children[i] = createVNode(
 				Fragment,
 				{ children: childVNode },
@@ -281,8 +280,8 @@ function constructNewChildrenArray(newParentVNode, renderResult, oldChildren) {
 			continue;
 		}
 
-		childVNode._parent = newParentVNode;
-		childVNode._depth = newParentVNode._depth + 1;
+		childVNode._parent = newParentVNode; // 建立父子节点关系
+		childVNode._depth = newParentVNode._depth + 1; // 记录当前节点在虚拟 DOM 树中的深度
 
 		// 查找新节点是否能在旧节点数组中匹配到，matchingIndex是新节点在旧节点数组中的索引
 		const matchingIndex = findMatchingIndex(
@@ -295,7 +294,10 @@ function constructNewChildrenArray(newParentVNode, renderResult, oldChildren) {
 		// Temporarily store the matchingIndex on the _index property so we can pull
 		// out the oldVNode in diffChildren. We'll override this to the VNode's
 		// final index after using this property to get the oldVNode
-		childVNode._index = matchingIndex; // 暂时将匹配到的索引（有可能为-1）存储到新 VNode 的 _index 属性上
+		childVNode._index = matchingIndex;
+		// 暂时将匹配到的索引（有可能为-1）存储到新 VNode 的 _index 属性上
+		// 这样就可以在 diffChildren 中取出 oldVNode
+		// 在使用此属性获取 oldVNode 之后，将会覆盖为新 VNode 的最终索引
 
 		oldVNode = null;
 		if (matchingIndex !== -1) {
@@ -353,31 +355,35 @@ function constructNewChildrenArray(newParentVNode, renderResult, oldChildren) {
 	// unmounted.
 	// 如果还有剩余的 oldChildren，那么就需要将它们移除
 	if (remainingOldChildren) {
-		for (i = 0; i < oldChildrenLength; i++) {
+		for (i = 0; i < oldChildrenLength; i++) { // 遍历oldChildren
 			oldVNode = oldChildren[i];
-			if (oldVNode != null && (oldVNode._flags & MATCHED) === 0) {
+			if (oldVNode != null && (oldVNode._flags & MATCHED) === 0) { // 如果没有被标记为已匹配
 				if (oldVNode._dom == newParentVNode._nextDom) {
 					newParentVNode._nextDom = getDomSibling(oldVNode);
 				}
 
-				unmount(oldVNode, oldVNode);
+				unmount(oldVNode, oldVNode); // 卸载节点，DOM上对应的节点也会一并删除
 			}
 		}
 	}
+
+	// 最终，新VNode 会被添加 _index 属性，值为其在 旧VNode 数组中的索引，旧VNode 中找不到则为-1
+	// 同时，新VNode 也会被添加 _flags 属性，标识其是否应该被插入
+	// 如果有没有匹配上 新VNode 的 旧Vnode，则 旧Vnode 会从 DOM 中移除
 }
 
 /**
- * @param {VNode} parentVNode
- * @param {PreactElement} oldDom
- * @param {PreactElement} parentDom
- * @returns {PreactElement}
+ * @param {VNode} parentVNode 表示当前要插入的VNode
+ * @param {PreactElement} oldDom 表示在真实DOM中要插入在其前面的节点
+ * @param {PreactElement} parentDom 表示要将VNode插入到其下的真实DOM节点
+ * @returns {PreactElement} 返回值是最后插入的DOM节点
  */
 function insert(parentVNode, oldDom, parentDom) {
 	// Note: VNodes in nested suspended trees may be missing _children.
 
-	if (typeof parentVNode.type == 'function') {
+	if (typeof parentVNode.type == 'function') { // 函数组件
 		let children = parentVNode._children;
-		for (let i = 0; children && i < children.length; i++) {
+		for (let i = 0; children && i < children.length; i++) { // 遍历其子节点
 			if (children[i]) {
 				// If we enter this code path on sCU bailout, where we copy
 				// oldVNode._children to newVNode._children, we need to update the old
@@ -464,7 +470,8 @@ function findMatchingIndex(
 			type === oldVNode.type &&
 			(oldVNode._flags & MATCHED) === 0)
 	) {
-		// 如果相同位置上的节点是null，或者key/type完全相同且旧节点还没有被匹配上，则视为匹配成功
+		// 如果相同位置上的节点是null，会被视为需要在该位置插入新节点，返回 skewedIndex
+		// 如果相同位置上的节点不是null，且key/type完全相同且旧节点还没有被匹配上，则视为匹配成功
 		return skewedIndex;
 	} else if (shouldSearch) {
 		// 相同位置的节点没有匹配上，且需要继续搜索

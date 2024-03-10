@@ -1,28 +1,27 @@
-import { useState } from 'preact/hooks';
+import { useState, useEffect } from 'preact/hooks';
 import './app.css';
 
-// import { constructNewChildrenArray } from './test/diffTest';
+import test from './test/index';
 
-// constructNewChildrenArray(
-// 	['A', 'B', 'C', 'D', 'E', 'F'].map(value => ({ value, _flags: [] })),
-// 	['B', 'A', 'C', 'D', 'F', 'E'].map(value => ({ value, _flags: [] }))
-// );
+// test();
+
 
 export function App() {
-	const [list, setList] = useState(['A', 'B', 'C', 'D', 'E', 'F']);
+	const [list, setList] = useState(['A', 'B', 'C']);
+
+	// useEffect(() => {
+	// 	setTimeout(() => {
+	// 		setList(['B', 'C', 'A'])
+	// 	}, 3000)
+	// }, [])
 
 	return (
 		<>
-			<div class="card">
-				{list.map(item => (
+			{
+				list.map(item => (
 					<div key={item}>{item}</div>
-				))}
-			</div>
-			<div class="card">
-				<button onClick={() => setList(['B', 'A', 'C', 'D', 'F', 'E'])}>
-					Change List
-				</button>
-			</div>
+				))
+			}
 		</>
 	);
 }

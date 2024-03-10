@@ -91,6 +91,7 @@ BaseComponent.prototype.render = Fragment;
 export function getDomSibling(vnode, childIndex) {
 	if (childIndex == null) {
 		// Use childIndex==null as a signal to resume the search from the vnode's sibling
+		// 使用childIndex==null作为信号，从vnode的同级继续搜索，注意使用的是非严格相等
 		return vnode._parent
 			? getDomSibling(vnode._parent, vnode._index + 1)
 			: null;

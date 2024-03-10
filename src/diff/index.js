@@ -13,6 +13,7 @@ import options from '../options';
 
 /**
  * Diff two virtual nodes and apply proper changes to the DOM
+ * diff 两个VNode，并将更改应用到DOM上
  * @param {PreactElement} parentDom The parent of the DOM element
  * @param {VNode} newVNode The new virtual node
  * @param {VNode} oldVNode The old virtual node
@@ -584,7 +585,7 @@ export function applyRef(ref, value, vnode) {
 }
 
 /**
- * Unmount a virtual node from the tree and apply DOM changes
+ * Unmount a virtual node from the tree and apply DOM changes 从树中卸载VNode，并应用到DOM上
  * @param {VNode} vnode The virtual node to unmount
  * @param {VNode} parentVNode The parent of the VNode that initiated the unmount
  * @param {boolean} [skipRemove] Flag that indicates that a parent node of the
@@ -600,7 +601,7 @@ export function unmount(vnode, parentVNode, skipRemove) {
 		}
 	}
 
-	if ((r = vnode._component) != null) {
+	if ((r = vnode._component) != null) { // 执行类函数的 componentWillUnmount 方法
 		if (r.componentWillUnmount) {
 			try {
 				r.componentWillUnmount();
@@ -614,7 +615,7 @@ export function unmount(vnode, parentVNode, skipRemove) {
 	}
 
 	if ((r = vnode._children)) {
-		for (let i = 0; i < r.length; i++) {
+		for (let i = 0; i < r.length; i++) { // 卸载子节点
 			if (r[i]) {
 				unmount(
 					r[i],
@@ -626,7 +627,7 @@ export function unmount(vnode, parentVNode, skipRemove) {
 	}
 
 	if (!skipRemove && vnode._dom != null) {
-		removeNode(vnode._dom);
+		removeNode(vnode._dom); // 在真实的DOM中移除该节点
 	}
 
 	// Must be set to `undefined` to properly clean up `_nextDom`

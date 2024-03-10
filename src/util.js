@@ -19,7 +19,8 @@ export function assign(obj, props) {
  * Remove a child node from its parent if attached. This is a workaround for
  * IE11 which doesn't support `Element.prototype.remove()`. Using this function
  * is smaller than including a dedicated polyfill.
- * @param {preact.ContainerNode} node The node to remove
+ * 调用父节点的 removeChild 方法移除节点
+ * @param {preact.ContainerNode} node The node to remove 真实的DOM节点
  */
 export function removeNode(node) {
 	let parentNode = node.parentNode;
