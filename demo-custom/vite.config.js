@@ -30,7 +30,7 @@ export default defineConfig({
 				'src',
 				'devtools'
 			),
-			//'preact/debug': resolvePkg('debug'),
+			'preact/debug': resolvePkg('debug'),
 			'preact/devtools': resolvePkg('devtools'),
 			'preact/hooks': resolvePkg('hooks'),
 			'preact/jsx-runtime': resolvePkg('jsx-runtime'),

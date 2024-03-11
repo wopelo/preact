@@ -205,7 +205,8 @@ function constructNewChildrenArray(newParentVNode, renderResult, oldChildren) {
 			childVNode == null ||
 			typeof childVNode == 'boolean' ||
 			typeof childVNode == 'function'
-		) { // 某个组件返回 null 或 布尔值 或 函数 或 class，这种情况视为无效
+		) {
+			// 某个组件返回 null 或 布尔值 或 函数 或 class，这种情况视为无效
 			childVNode = newParentVNode._children[i] = null;
 		}
 		// If this newVNode is being reused (e.g. <div>{reuse}{reuse}</div>) in the same diff,
@@ -217,7 +218,8 @@ function constructNewChildrenArray(newParentVNode, renderResult, oldChildren) {
 			// eslint-disable-next-line valid-typeof
 			typeof childVNode == 'bigint' ||
 			childVNode.constructor == String
-		) { // 某个组件返回 字符串 或 数字 或 大整数，则创建对应的VNode
+		) {
+			// 某个组件返回 字符串 或 数字 或 大整数，则创建对应的VNode
 			childVNode = newParentVNode._children[i] = createVNode(
 				null,
 				childVNode,
@@ -225,7 +227,8 @@ function constructNewChildrenArray(newParentVNode, renderResult, oldChildren) {
 				null,
 				null
 			);
-		} else if (isArray(childVNode)) { // 某个组件返回数组，则创建对应的VNode
+		} else if (isArray(childVNode)) {
+			// 某个组件返回数组，则创建对应的VNode
 			childVNode = newParentVNode._children[i] = createVNode(
 				Fragment,
 				{ children: childVNode },
@@ -355,9 +358,11 @@ function constructNewChildrenArray(newParentVNode, renderResult, oldChildren) {
 	// unmounted.
 	// 如果还有剩余的 oldChildren，那么就需要将它们移除
 	if (remainingOldChildren) {
-		for (i = 0; i < oldChildrenLength; i++) { // 遍历oldChildren
+		for (i = 0; i < oldChildrenLength; i++) {
+			// 遍历oldChildren
 			oldVNode = oldChildren[i];
-			if (oldVNode != null && (oldVNode._flags & MATCHED) === 0) { // 如果没有被标记为已匹配
+			if (oldVNode != null && (oldVNode._flags & MATCHED) === 0) {
+				// 如果没有被标记为已匹配
 				if (oldVNode._dom == newParentVNode._nextDom) {
 					newParentVNode._nextDom = getDomSibling(oldVNode);
 				}
@@ -374,22 +379,24 @@ function constructNewChildrenArray(newParentVNode, renderResult, oldChildren) {
 
 /**
  * @param {VNode} parentVNode 表示当前要插入的VNode
- * @param {PreactElement} oldDom 表示在真实DOM中要插入在其前面的节点
+ * @param {PreactElement} oldDom 表示在真实DOM中要插入在其前面的节点，如果为 null，则会插入到末尾
  * @param {PreactElement} parentDom 表示要将VNode插入到其下的真实DOM节点
  * @returns {PreactElement} 返回值是最后插入的DOM节点
  */
 function insert(parentVNode, oldDom, parentDom) {
 	// Note: VNodes in nested suspended trees may be missing _children.
 
-	if (typeof parentVNode.type == 'function') { // 函数组件
+	if (typeof parentVNode.type == 'function') {
+		// 类组件或函数组件
 		let children = parentVNode._children;
-		for (let i = 0; children && i < children.length; i++) { // 遍历其子节点
+		for (let i = 0; children && i < children.length; i++) {
+			// 遍历其子节点
 			if (children[i]) {
 				// If we enter this code path on sCU bailout, where we copy
 				// oldVNode._children to newVNode._children, we need to update the old
 				// children's _parent pointer to point to the newVNode (parentVNode
 				// here).
-				children[i]._parent = parentVNode;
+				children[i]._parent = parentVNode; // 建立父子节点关系
 				oldDom = insert(children[i], oldDom, parentDom);
 			}
 		}

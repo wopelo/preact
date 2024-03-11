@@ -222,7 +222,7 @@ export function diff(
 
 			c.context = componentContext;
 			c.props = newProps;
-			c._parentDom = parentDom;
+			c._parentDom = parentDom; // 设置实例的 _parentDom
 			c._force = false;
 
 			let renderHook = options._render,
@@ -323,6 +323,7 @@ export function diff(
 		newVNode._children = oldVNode._children;
 		newVNode._dom = oldVNode._dom;
 	} else {
+		// type 为标签名（至少首次渲染会走到这里）
 		newVNode._dom = diffElementNodes(
 			oldVNode._dom,
 			newVNode,
@@ -367,9 +368,9 @@ export function commitRoot(commitQueue, root, refQueue) {
 }
 
 /**
- * Diff two virtual nodes representing DOM element
+ * Diff two virtual nodes representing DOM element diff两个代表DOM元素的虚拟节点
  * @param {PreactElement} dom The DOM element representing the virtual nodes
- * being diffed
+ * being diffed 正在对比的虚拟节点的DOM元素，新旧VNode 共享同一个 DOM 元素
  * @param {VNode} newVNode The new virtual node
  * @param {VNode} oldVNode The old virtual node
  * @param {object} globalContext The current context object
@@ -430,13 +431,17 @@ function diffElementNodes(
 	}
 
 	if (dom == null) {
+		// 如果还没有创建 DOM 元素，根据 newVNode.type 创建 DOM
 		if (nodeType === null) {
+			// 创建文本元素
 			return document.createTextNode(newProps);
 		}
 
 		if (isSvg) {
+			// 创建 SVG
 			dom = document.createElementNS('http://www.w3.org/2000/svg', nodeType);
 		} else {
+			// 创建其他 DOM 元素，第二个参数与创建自定义元素有关
 			dom = document.createElement(nodeType, newProps.is && newProps);
 		}
 
@@ -475,6 +480,7 @@ function diffElementNodes(
 			} else if (i == 'dangerouslySetInnerHTML') {
 				oldHtml = value;
 			} else if (i !== 'key' && !(i in newProps)) {
+				// 移除 newProps 中不存在的属性
 				setProperty(dom, i, null, value, isSvg);
 			}
 		}
@@ -496,7 +502,7 @@ function diffElementNodes(
 				(!isHydrating || typeof value == 'function') &&
 				oldProps[i] !== value
 			) {
-				setProperty(dom, i, value, oldProps[i], isSvg);
+				setProperty(dom, i, value, oldProps[i], isSvg); // 更新属性
 			}
 		}
 
@@ -601,7 +607,8 @@ export function unmount(vnode, parentVNode, skipRemove) {
 		}
 	}
 
-	if ((r = vnode._component) != null) { // 执行类函数的 componentWillUnmount 方法
+	if ((r = vnode._component) != null) {
+		// 执行类函数的 componentWillUnmount 方法
 		if (r.componentWillUnmount) {
 			try {
 				r.componentWillUnmount();
@@ -615,7 +622,8 @@ export function unmount(vnode, parentVNode, skipRemove) {
 	}
 
 	if ((r = vnode._children)) {
-		for (let i = 0; i < r.length; i++) { // 卸载子节点
+		for (let i = 0; i < r.length; i++) {
+			// 卸载子节点
 			if (r[i]) {
 				unmount(
 					r[i],
