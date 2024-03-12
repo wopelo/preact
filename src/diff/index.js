@@ -42,7 +42,7 @@ export function diff(
 	isHydrating,
 	refQueue
 ) {
-	console.log('diff', {
+	console.log('diffdiff', {
 		parentDom,
 		newVNode,
 		oldVNode,
