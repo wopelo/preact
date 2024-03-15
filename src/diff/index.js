@@ -248,7 +248,7 @@ export function diff(
 
 					tmp = c.render(c.props, c.state, c.context); // tmp 就是函数组件执行的结果
 
-					console.log('tmp', tmp);
+					// console.log('tmp', tmp);
 
 					// Handle setState called in render, see #2553
 					c.state = c._nextState;
@@ -346,6 +346,7 @@ export function diff(
  * @param {VNode} root
  */
 export function commitRoot(commitQueue, root, refQueue) {
+	// console.log('commitRoot', { commitQueue, root, refQueue })
 	for (let i = 0; i < refQueue.length; i++) {
 		applyRef(refQueue[i], refQueue[++i], refQueue[++i]);
 	}
@@ -393,6 +394,12 @@ function diffElementNodes(
 	isHydrating,
 	refQueue
 ) {
+	console.log('diffElementNodes', {
+		dom,
+		newVNode,
+		oldVNode
+	});
+
 	let oldProps = oldVNode.props;
 	let newProps = newVNode.props;
 	let nodeType = /** @type {string} */ (newVNode.type);

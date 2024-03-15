@@ -549,10 +549,10 @@ function argsChanged(oldArgs, newArgs) {
 }
 
 /**
- * @template Arg
- * @param {Arg} arg
- * @param {(arg: Arg) => any} f
- * @returns {any}
+ * 判断参数f是否为函数，如果是函数则执行并返回结果，否则直接返回f
+ * @param {any} arg - 传入函数f的参数
+ * @param {function|any} f - 可能是一个函数，也可能是任何类型的值
+ * @return {any} - 返回函数f执行的结果或者直接返回f
  */
 function invokeOrReturn(arg, f) {
 	return typeof f == 'function' ? f(arg) : f;
