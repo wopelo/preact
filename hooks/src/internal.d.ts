@@ -44,14 +44,18 @@ export type HookState =
 	| ErrorBoundaryHookState
 	| IdHookState;
 
+/**
+ * 基础钩子状态接口，定义了钩子状态的通用属性。
+ * 所有特定类型的钩子状态都将扩展自这个基础接口。
+ */
 interface BaseHookState {
-	_value?: unknown;
-	_nextValue?: undefined;
-	_pendingValue?: undefined;
-	_args?: undefined;
-	_pendingArgs?: undefined;
-	_component?: undefined;
-	_cleanup?: undefined;
+	_value?: unknown; // 当前钩子的值
+	_nextValue?: undefined; // 下一个钩子的值，用于更新前的临时存储
+	_pendingValue?: undefined; // 待处理的钩子值，用于异步更新场景
+	_args?: undefined; // 钩子的参数列表，用于钩子的自定义行为
+	_pendingArgs?: undefined; // 待处理的参数列表，用于异步更新参数
+	_component?: undefined; // 关联的组件实例，用于钩子与组件的关联管理
+	_cleanup?: undefined; // 清理函数，用于组件卸载时执行清理操作
 }
 
 export type Effect = () => void | Cleanup;

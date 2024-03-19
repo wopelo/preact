@@ -170,6 +170,7 @@ export function diff(
 					c.componentWillReceiveProps(newProps, componentContext);
 				}
 
+				// 在类组件可以通过调用 this.forceUpdate 将组件 _force 属性设为 ture，以跳过 shouldComponentUpdate 强制更新
 				if (
 					!c._force &&
 					((c.shouldComponentUpdate != null &&
