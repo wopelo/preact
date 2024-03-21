@@ -148,6 +148,8 @@ options.unmount = vnode => {
  */
 function getHookState(index, type) {
 	if (options._hook) {
+		// 与判断 hook 是否在组件中使用有关
+		// console.log('options._hook', options._hook)
 		options._hook(currentComponent, index, currentHook || type);
 	}
 	currentHook = 0;
@@ -217,7 +219,7 @@ export function useReducer(reducer, initialState, init) {
 			action => {
 				const currentValue = hookState._nextValue
 					? hookState._nextValue[0]
-					: hookState._value[0]; // 获取当前 state
+					: hookState._value[0]; // 获取当前 state，需要判断一下 hookState._nextValue 的原因是 dispatch 可能会被反复调用
 				const nextValue = hookState._reducer(currentValue, action); // 调用 reducer 函数，获取新 state
 
 				if (currentValue !== nextValue) {
@@ -249,7 +251,8 @@ export function useReducer(reducer, initialState, init) {
 			// need to call it. 如果我们正在处理强制更新，将不会调用“shouldComponentUpdate”。但是我们使用它来更新钩子值，所以我们需要调用它。
 			currentComponent.componentWillUpdate = function (p, s, c) {
 				if (this._force) {
-					// 当组件 _force 属性为 true 时，在 diff 中会跳过调用 shouldComponentUpdate
+					// 类组件可以通过调用 forceUpdate 将组件 _force 属性设为 true 以强制更新
+					// 此时在 diff 中会跳过调用 shouldComponentUpdate
 					let tmp = prevScu;
 					// Clear to avoid other sCU hooks from being called
 					prevScu = undefined;
