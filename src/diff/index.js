@@ -122,12 +122,14 @@ export function diff(
 				c.context = componentContext;
 				c._globalContext = globalContext;
 				isNew = c._dirty = true;
-				c._renderCallbacks = []; // 渲染完成后调用的函数，比如 componentDidMount
-				c._stateCallbacks = [];
+				// 渲染完成后调用的函数，包括 componentDidMount、setState 的 callback、componentDidUpdate
+				c._renderCallbacks = [];
+				c._stateCallbacks = []; // _stateCallbacks 初始化
 			}
 
 			// Invoke getDerivedStateFromProps
 			if (c._nextState == null) {
+				// _nextState 初始化
 				c._nextState = c.state;
 			}
 

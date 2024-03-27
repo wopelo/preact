@@ -29,8 +29,10 @@ BaseComponent.prototype.setState = function (update, callback) {
 	// only clone state when copying to nextState the first time.
 	let s;
 	if (this._nextState != null && this._nextState !== this.state) {
+		// 如果有 _nextState 且 _nextState !== state
 		s = this._nextState;
 	} else {
+		// 如果没有 _nextState 或者 _nextState === state
 		s = this._nextState = assign({}, this.state);
 	}
 
@@ -38,17 +40,24 @@ BaseComponent.prototype.setState = function (update, callback) {
 		// Some libraries like `immer` mark the current state as readonly,
 		// preventing us from mutating it, so we need to clone it. See #2716
 		update = update(assign({}, s), this.props);
+
+		// 用法
+		// this.setState((prevState, props) => {
+		//   return { count: prevState.count + 1 };
+		// })
 	}
 
 	if (update) {
-		assign(s, update);
+		assign(s, update); // assign 会影响到 s，进而影响到 _nextState
 	}
 
 	// Skip update if updater function returned null
 	if (update == null) return;
 
 	if (this._vnode) {
+		// 实例的 _vnode 属性在 diff 中被设置
 		if (callback) {
+			// _stateCallbacks 会在 diff 中使用，diff 会将 _stateCallbacks 中的元素插入到实例的 _renderCallbacks 属性中
 			this._stateCallbacks.push(callback);
 		}
 		enqueueRender(this);

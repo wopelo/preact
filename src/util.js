@@ -3,7 +3,7 @@ import { EMPTY_ARR } from './constants';
 export const isArray = Array.isArray;
 
 /**
- * Assign properties from `props` to `obj`
+ * Assign properties from `props` to `obj` 将 `props` 对象中的属性复制到 `obj` 对象中
  * @template O, P The obj and props types
  * @param {O} obj The object to copy properties to
  * @param {P} props The object to copy properties from
