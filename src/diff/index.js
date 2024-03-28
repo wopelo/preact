@@ -344,6 +344,7 @@ export function diff(
 }
 
 /**
+ * commitRoot 函数用于在组件更新过程的最后阶段，执行组件的回调函数，并处理组件的 ref。
  * @param {Array<Component>} commitQueue List of components
  * which have callbacks to invoke in commitRoot
  * @param {VNode} root
@@ -354,6 +355,8 @@ export function commitRoot(commitQueue, root, refQueue) {
 		applyRef(refQueue[i], refQueue[++i], refQueue[++i]);
 	}
 
+	// options._commit 定义在 hooks/src/index.js 中
+	// 主要功能是执行组件的 renderCallbacks，调用 invokeCleanup 和 invokeEffect
 	if (options._commit) options._commit(root, commitQueue);
 
 	commitQueue.some(c => {
@@ -364,6 +367,7 @@ export function commitRoot(commitQueue, root, refQueue) {
 			commitQueue.some(cb => {
 				// @ts-expect-error See above comment on commitQueue
 				cb.call(c);
+				// 执行 _renderCallbacks，组件的 componentDidMount、componentDidUpdate 生命周期，setState 的 callback 在此时执行
 			});
 		} catch (e) {
 			options._catchError(e, c._vnode);

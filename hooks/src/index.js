@@ -101,6 +101,11 @@ options.diffed = vnode => {
 };
 
 // TODO: Improve typing of commitQueue parameter
+/**
+ * 提交更新，执行组件的 renderCallbacks，调用 invokeCleanup 和 invokeEffect
+ * @param {import('./internal').VNode} vnode - 虚拟节点
+ * @param {Array} commitQueue - 待提交的组件队列
+ */
 /** @type {(vnode: import('./internal').VNode, commitQueue: any) => void} */
 options._commit = (vnode, commitQueue) => {
 	commitQueue.some(component => {
@@ -592,6 +597,7 @@ function invokeEffect(hook) {
 }
 
 /**
+ * 通过对比两个数组的长度以及相同位置的元素检查两个参数数组是否不同，
  * @param {unknown[]} oldArgs
  * @param {unknown[]} newArgs
  * @returns {boolean}

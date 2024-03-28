@@ -127,7 +127,7 @@ export function getDomSibling(vnode, childIndex) {
 }
 
 /**
- * Trigger in-place re-rendering of a component.
+ * Trigger in-place re-rendering of a component. 触发组件重新渲染
  * @param {Component} component The component to rerender
  */
 function renderComponent(component, commitQueue, refQueue) {
@@ -201,9 +201,12 @@ let rerenderQueue = [];
 
 let prevDebounce;
 
+// defer 最终是一个函数，默认情况下 Preact 使用 Promise.resolve() 的微任务计时。若 Promise 不可用，则使用 setTimeout。
 const defer =
 	typeof Promise == 'function'
-		? Promise.prototype.then.bind(Promise.resolve())
+		? // then 方法绑定在一个已经 resolve 的 promise 对象上
+		  // 此时 defer(callback) 等同于 Promise.resolve().then(callback)
+		  Promise.prototype.then.bind(Promise.resolve())
 		: setTimeout;
 
 /**
@@ -213,17 +216,19 @@ const defer =
 export function enqueueRender(c) {
 	if (
 		(!c._dirty &&
-			(c._dirty = true) &&
-			rerenderQueue.push(c) &&
-			!process._rerenderCount++) ||
-		prevDebounce !== options.debounceRendering
+			(c._dirty = true) && // 标记 _dirty 为 true，表示该组件需要重新渲染
+			rerenderQueue.push(c) && // 将组件加入到 rerenderQueue 渲染队列中
+			!process._rerenderCount++) || // 如果是第一个加入队列的渲染任务，!process._rerenderCount++ 返回 true
+		prevDebounce !== options.debounceRendering // 参考 https://preactjs.com/guide/v10/options/#optionsdebouncerendering
 	) {
+		// 如果没有设置 options.debounceRendering，则只有当组件未被标记为脏且是第一个加入队列的渲染任务，才会进入 if 分支
 		prevDebounce = options.debounceRendering;
-		(prevDebounce || defer)(process);
+		(prevDebounce || defer)(process); // 通常情况下 process 会在微任务队列中执行
 	}
 }
 
 /**
+ * 根据组件在 VDOM Tree 中的深度进行排序，_depth 小的靠前，即越顶层组件排在越前面
  * @param {Component} a
  * @param {Component} b
  */
@@ -235,16 +240,19 @@ function process() {
 	let commitQueue = [];
 	let refQueue = [];
 	let root;
-	rerenderQueue.sort(depthSort);
+	rerenderQueue.sort(depthSort); // rerenderQueue 被重新排序，越顶层组件排在越前面
 	// Don't update `renderCount` yet. Keep its value non-zero to prevent unnecessary
 	// process() calls from getting scheduled while `queue` is still being consumed.
 	while ((c = rerenderQueue.shift())) {
 		if (c._dirty) {
 			let renderQueueLength = rerenderQueue.length;
-			root = renderComponent(c, commitQueue, refQueue) || root;
+			root = renderComponent(c, commitQueue, refQueue) || root; // 重新渲染组件
 			// If this WAS the last component in the queue, run commit callbacks *before* we exit the tight loop.
 			// This is required in order for `componentDidMount(){this.setState()}` to be batched into one flush.
 			// Otherwise, also run commit callbacks if the render queue was mutated.
+			// 两种情况会进入到 if 中：
+			// 1.如果是当前队列中的最后一个组件，需要在退出循环之前执行
+			// 2.由于在组件的 componentDidMount 或 componentDidUpdate 中调用了 setState（这两个方法在 diff 中被调用），导致组件渲染过程中有新组件加入到队列中
 			if (renderQueueLength === 0 || rerenderQueue.length > renderQueueLength) {
 				commitRoot(commitQueue, root, refQueue);
 				refQueue.length = commitQueue.length = 0;
@@ -252,8 +260,9 @@ function process() {
 				// When i.e. rerendering a provider additional new items can be injected, we want to
 				// keep the order from top to bottom with those new items so we can handle them in a
 				// single pass
-				rerenderQueue.sort(depthSort);
+				rerenderQueue.sort(depthSort); // 主要针对第二种情况
 			} else if (root) {
+				// _commit 在 hooks/src/index.js 中定义，主要就是遍历执行 _renderCallbacks，调用 invokeCleanup 和 invokeEffect
 				if (options._commit) options._commit(root, EMPTY_ARR);
 			}
 		}
