@@ -4,6 +4,8 @@ import path from 'path';
 const root = path.join(__dirname, '..');
 const resolvePkg = (...parts) => path.join(root, ...parts, 'src', 'index.js');
 
+console.log('xxxx', resolvePkg('compat'));
+
 // https://vitejs.dev/config/
 /** @type {import('vite').UserConfig} */
 export default defineConfig({
@@ -23,6 +25,7 @@ export default defineConfig({
 	},
 	resolve: {
 		alias: {
+			'preact/compat': resolvePkg('compat'),
 			'preact/debug/src/debug': path.join(root, 'debug', 'src', 'debug'),
 			'preact/devtools/src/devtools': path.join(
 				root,
